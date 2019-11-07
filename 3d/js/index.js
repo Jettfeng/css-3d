@@ -118,26 +118,28 @@ var table = [
   'Uus','Ununseptium','(294)',17,7,
   'Uuo','Ununoctium','(294)',18,7
 ]
+var container = document.getElementById('container')
 var camera, scene, renderer
 var controls
 var objects = []
-var targets = { table: [], sphere: [], helix: [], grid: [] }
-init()
-animate()
+var targets = []
+var root = new THREE.Object3D(); //控制旋转
+
+init() //初始化
+animate() //自动旋转
 function init() {
-  camera = new THREE.PerspectiveCamera(
-    40,
-    window.innerWidth / window.innerHeight,
-    1,
-    10000
-  )
+  camera = new THREE.PerspectiveCamera(40,container.clientWidth / container.clientHeight,1,10000)
   camera.position.z = 3000
   scene = new THREE.Scene()
+  scene.add(root)
   // table
   for (var i = 0; i < table.length; i += 5) {
     var element = document.createElement('div')
     element.className = 'element'
     element.style.backgroundColor = 'rgba(0,127,127,' + (Math.random() * 0.5 + 0.25) + ')'
+    if(i<200){ //高亮效果
+      element.style.backgroundColor='red'
+    }
     var number = document.createElement('div')
     number.className = 'number'
     number.textContent = i / 5 + 1
@@ -151,12 +153,14 @@ function init() {
     details.innerHTML = table[i + 1] + '<br>' + table[i + 2]
     element.appendChild(details)
     var object = new THREE.CSS3DObject(element)
-    object.position.x = 0//Math.random() * 4000 - 2000
-    object.position.y = 0//Math.random() * 4000 - 2000
-    object.position.z = 0//Math.random() * 4000 - 2000
+    object.position.x = 0
+    object.position.y = 0
+    object.position.z = 0
     scene.add(object)
     objects.push(object)
+    root.add(object)
   }
+  
   // sphere
   var vector = new THREE.Vector3()
   for (var i = 0, l = objects.length; i < l; i++) {
@@ -168,10 +172,10 @@ function init() {
     object.position.z = 800 * Math.cos(phi)
     vector.copy(object.position).multiplyScalar(2)
     object.lookAt(vector)
-    targets.sphere.push(object)
+    targets.push(object)
   }
   renderer = new THREE.CSS3DRenderer()
-  renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.setSize(container.clientWidth,container.clientHeight)
   renderer.domElement.style.position = 'absolute'
   document.getElementById('container').appendChild(renderer.domElement)
   controls = new THREE.TrackballControls(camera, renderer.domElement)
@@ -180,10 +184,9 @@ function init() {
   controls.maxDistance = 6000
 }
 
-controls.addEventListener('change', render)
-transform(targets.sphere, 5000)
-window.addEventListener('resize', onWindowResize, false)
-
+controls.addEventListener('change', render) ///拖动
+transform(targets, 0) //生成球形
+// window.addEventListener('resize', onWindowResize, false)
 function transform(targets, duration) {
   TWEEN.removeAll()
   for (var i = 0; i < objects.length; i++) {
@@ -210,36 +213,30 @@ function transform(targets, duration) {
     .start()
 }
 
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight
-  camera.updateProjectionMatrix()
-  renderer.setSize(window.innerWidth, window.innerHeight)
-  render()
-}
+// function onWindowResize() {
+//   camera.aspect = window.innerWidth / window.innerHeight
+//   camera.updateProjectionMatrix()
+//   renderer.setSize(window.innerWidth, window.innerHeight)
+//   render()
+// }
 
 function animate() {
   requestAnimationFrame(animate)
+  // var time = Date.now() * 0.0004;
+	// root.rotation.x = time;
+  // root.rotation.y = time * 0.7;
+  // render()
   TWEEN.update()
   controls.update()
+  
 }
+console.log(controls);
 
 function render() {
   renderer.render(scene, camera)
 }
 
-document.body.addEventListener('click', function(e) {
-  let target = e.target
-  let targetParent = e.target.parentNode
+console.log(controls);
+console.log(root);
 
-  if (
-    target.className === 'element' ||
-    (targetParent && targetParent.className === 'element')
-  ) {
-    if (target.className === 'element') {
-      target.style.backgroundColor = 'red'
-    } else {
-      targetParent.style.backgroundColor = 'red'
-    }
-  }
-})
 
